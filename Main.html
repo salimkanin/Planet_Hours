@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>برنامج الساعات الفلكية</title>
+    <style>
+        body {
+            font-family: 'Tajawal', Arial, sans-serif;
+            direction: rtl;
+            margin: 0;
+            padding: 0;
+            background-color: #e8f0fe;
+            color: #444;
+            font-size: 14px;
+        }
+
+        .main-div {
+            width: 90%;
+            max-width: 800px; /* تعيين عرض أقصى لعرض الصفحة على الكمبيوتر */
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+
+        .main-title {
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1a73e8;
+        }
+
+        .grid-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .two-columns {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .child-div {
+            padding: 15px;
+            background-color: #f7f9fc;
+            border: 1px solid #d1d9e6;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        button {
+            background-color: #1a73e8;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .text-box {
+            background-color: #f0f4fc;
+            border: 1px solid #c9d4e4;
+            border-radius: 5px;
+            color: #555;
+            width: 100%;
+            min-height: 120px;
+            font-size: 14px;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: vertical;
+            text-align: right;
+        }
+
+        table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    th, td {
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+    
+    /* تنسيق الساعات النهارية */
+    .day-time {
+        background-color: #f9f9f9; /* لون خلفية فاتح */
+        color: #333; /* لون الخط الداكن */
+    }
+    
+    /* تنسيق الساعات الليلية */
+    .night-time {
+        background-color: #333; /* لون خلفية داكن */
+        color: #f9f9f9; /* لون الخط الفاتح */
+    }
+    
+    /* تنسيق رؤوس الجدول */
+    th {
+        background-color: #666; /* لون خلفية للرؤوس */
+        color: #fff; /* لون الخط الأبيض للرؤوس */
+    }
+
+        input[type="date"], input[type="time"], select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #c9d4e4;
+            border-radius: 5px;
+            background-color: #f4f8fc;
+            color: #333;
+            font-size: 14px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .season-note {
+            font-size: 12px;
+            color: #b10101;
+            margin-top: 8px;
+            text-align: right;
+            font-weight: bold
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-div">
+        <div class="main-title">برنامج الساعات الفلكية</div>
+
+        <div class="child-div">
+            <form onsubmit="calculateResults(); return false;">
+                <label for="season">اختر التوقيت:</label>
+                <select id="season">
+                    <option value="summer">التوقيت الصيفي</option>
+                    <option value="winter">التوقيت الشتوي</option>
+                </select>
+
+                <div class="season-note">
+                    التوقيب الصيفي يبدأ من شهر 14 مارس إلى 26 سبتمبر<br>
+                    التوقيب الشتوي يبدأ من شهر 28 سبتمبر إلى 12 مارس
+                </div>
+
+                <label for="تاريخ_مدخل">التاريخ:</label>
+                <input type="date" id="تاريخ_مدخل" name="تاريخ_مدخل" required>
+
+                <label for="وقت_شروق_مدخل">وقت الشروق:</label>
+                <input type="time" id="وقت_شروق_مدخل" name="وقت_شروق_مدخل" required>
+
+                <label for="وقت_غروب_مدخل">وقت الغروب:</label>
+                <input type="time" id="وقت_غروب_مدخل" name="وقت_غروب_مدخل" required>
+
+                <label for="وقت_شروق_تالي_مدخل">وقت الشروق (اليوم التالي):</label>
+                <input type="time" id="وقت_شروق_تالي_مدخل" name="وقت_شروق_تالي_مدخل" required>
+
+                <button type="submit">حساب النتائج</button>
+            </form>
+        </div>
+        <div class="child-div">
+            <!-- هنا تأتي المدخلات التي قام المستخدم بإدخالها-->
+            <p id="التاريخ_مدخل"></p>
+            <p id="وقت_شروق_مدخل_عرض"></p>
+            <p id="وقت_شروق_مدخل"></p>
+            <p id="وقت_غروب_مدخل_عرض"></p>
+            <p id="وقت_شروق_تالي_مدخل_عرض"></p>
+            <p id="يوم_حسب_تاريخ"></p>
+            <p id="ليلة_حسب_يوم"></p>
+            
+            <!-- تم إخفاء نتائج المعادلات عن المستخدم -->
+
+
+            <p id="غروب_ناقص_شروق" style="display: none;"></p>
+            <p id="غروب_ناقص_شروق_تالي" style="display: none;"></p>
+            <p id="منتصف_غروب_شروق_تالي" style="display: none;"></p>
+            <p id="معادلة_الشتاء_غروب_شروق_نصف_اليوم" style="display: none;"></p>
+            <p id="معادلة_الشتاء_غروب_شروق_تالي_نصف_اليوم" style="display: none;"></p>
+            <p id="منتصف_غروب_شروق" style="display: none;"></p>
+            <p id="معادلة_الصيف_غروب_شروق_نصف_اليوم" style="display: none;"></p>
+            <p id="معادلة_الصيف_غروب_شروق_تالي_نصف_اليوم" style="display: none;"></p>
+        </div>
+        <div class="grid-container two-columns">
+            <div class="child-div">
+                <div class="text-box" id="TextBox1">هنا يتم عرض البيانات تلقائيًا...</div>
+            </div>
+            <div class="child-div">
+                <div class="text-box" id="TextBox2">هنا يمكن عرض بيانات إضافية...</div>
+            </div>
+        </div>
+
+        <div class="child-div">
+            <table>
+                <tr>
+                    <th>الساعات</th>
+                    <th>من الساعة</th>
+                    <th>إلى الساعة</th>
+                    <th>إسم الكوكب</th>
+                </tr>
+                <tr class="day-time">
+                    <td>1</td>
+                    <td id="وقت_شروق_مدخل_جدول"></td>
+                    <td id="Row1"></td>
+                    <td id="PlanetRow1" style="color: red;"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>2</td>
+                    <td id="Row1-1"></td>
+                    <td id="Row2"></td>
+                    <td id="PlanetRow2"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>3</td>
+                    <td id="Row2-2"></td>
+                    <td id="Row3"></td>
+                    <td id="PlanetRow3"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>4</td>
+                    <td id="Row3-3"></td>
+                    <td id="Row4"></td>
+                    <td id="PlanetRow4"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>5</td>
+                    <td id="Row4-4"></td>
+                    <td id="Row5"></td>
+                    <td id="PlanetRow5"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>6</td>
+                    <td id="Row5-5"></td>
+                    <td id="Row6"></td>
+                    <td id="PlanetRow6"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>7</td>
+                    <td id="Row6-6"></td>
+                    <td id="Row7"></td>
+                    <td id="PlanetRow7"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>8</td>
+                    <td id="Row7-7"></td>
+                    <td id="Row8"></td>
+                    <td id="PlanetRow8" style="color: red;"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>9</td>
+                    <td id="Row8-8"></td>
+                    <td id="Row9"></td>
+                    <td id="PlanetRow9"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>10</td>
+                    <td id="Row9-9"></td>
+                    <td id="Row10"></td>
+                    <td id="PlanetRow10"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>11</td>
+                    <td id="Row10-10"></td>
+                    <td id="Row11"></td>
+                    <td id="PlanetRow11"></td>
+                </tr>
+                <tr class="day-time">
+                    <td>12</td>
+                    <td id="Row11-11"></td>
+                    <td id="Row12"></td>
+                    <td id="PlanetRow12"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>13</td>
+                    <td id="Row12-12"></td>
+                    <td id="Row13"></td>
+                    <td id="PlanetRow13" style="color: yellow;"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>14</td>
+                    <td id="Row13-13"></td>
+                    <td id="Row14"></td>
+                    <td id="PlanetRow14"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>15</td>
+                    <td id="Row14-14"></td>
+                    <td id="Row15"></td>
+                    <td id="PlanetRow15"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>16</td>
+                    <td id="Row15-15"></td>
+                    <td id="Row16"></td>
+                    <td id="PlanetRow16"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>17</td>
+                    <td id="Row16-16"></td>
+                    <td id="Row17"></td>
+                    <td id="PlanetRow17"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>18</td>
+                    <td id="Row17-17"></td>
+                    <td id="Row18"></td>
+                    <td id="PlanetRow18"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>19</td>
+                    <td id="Row18-18"></td>
+                    <td id="Row19"></td>
+                    <td id="PlanetRow19"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>20</td>
+                    <td id="Row19-19"></td>
+                    <td id="Row20"></td>
+                    <td id="PlanetRow20" style="color: yellow;"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>21</td>
+                    <td id="Row20-20"></td>
+                    <td id="Row21"></td>
+                    <td id="PlanetRow21"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>22</td>
+                    <td id="Row21-21"></td>
+                    <td id="Row22"></td>
+                    <td id="PlanetRow22"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>23</td>
+                    <td id="Row22-22"></td>
+                    <td id="Row23"></td>
+                    <td id="PlanetRow23"></td>
+                </tr>
+                <tr class="night-time">
+                    <td>24</td>
+                    <td id="Row23-23"></td>
+                    <td id="Row24"></td>
+                    <td id="PlanetRow24"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // الحسابات الأولية معتمدة على الدوال السابقة.
+        function calculateResults() {
+                // الحصول على الموسم المختار من المدخل select
+            const season = document.getElementById("season").value;
+            const dateInput = document.getElementById("تاريخ_مدخل").value;
+            const sunriseInput = document.getElementById("وقت_شروق_مدخل").value;
+            const sunsetInput = document.getElementById("وقت_غروب_مدخل").value;
+            const nextSunriseInput = document.getElementById("وقت_شروق_تالي_مدخل").value;
+        
+            if (!dateInput || !sunriseInput || !sunsetInput || !nextSunriseInput) {
+                alert("الرجاء إدخال جميع المدخلات");
+                return;
+            }
+        
+            // عرض المدخلات للمستخدم
+            document.getElementById("التاريخ_مدخل").innerText = "التاريخ: " + dateInput;
+            document.getElementById("وقت_شروق_مدخل_عرض").innerText = "وقت الشروق: " + sunriseInput + ":00";
+            document.getElementById("وقت_شروق_مدخل_جدول").innerText = sunriseInput + ":00";
+            document.getElementById("وقت_غروب_مدخل_عرض").innerText = "وقت الغروب: " + sunsetInput + ":00";
+            document.getElementById("وقت_شروق_تالي_مدخل_عرض").innerText = "وقت الشروق (اليوم التالي): " + nextSunriseInput + ":00";
+    
+    
+            const date = new Date(dateInput);
+            const dayOfWeek = date.toLocaleDateString('ar-EG', { weekday: 'long' });
+            document.getElementById("يوم_حسب_تاريخ").innerText = "اليوم: " + dayOfWeek;
+        
+            const nights = {
+                "الأحد": "ليلة الاثنين",
+                "الاثنين": "ليلة الثلاثاء",
+                "الثلاثاء": "ليلة الأربعاء",
+                "الأربعاء": "ليلة الخميس",
+                "الخميس": "ليلة الجمعة",
+                "الجمعة": "ليلة السبت",
+                "السبت": "ليلة الأحد"
+            };
+            document.getElementById("ليلة_حسب_يوم").innerText = "الليلة: " + (nights[dayOfWeek] || "غير معروف");
+            const Planet1 = {
+                "الأحد": "الشمس",
+                "الاثنين": "القمر",
+                "الثلاثاء": "المريخ",
+                "الأربعاء": "عطارد",
+                "الخميس": "المشتري",
+                "الجمعة": "الزهرة",
+                "السبت": "زحل",
+                            };
+            document.getElementById("PlanetRow1").innerText = (Planet1[dayOfWeek] || "غير معروف");
+            const Planet2 = {
+                "الأحد": "الزهرة",
+                "الاثنين": "زحل",
+                "الثلاثاء": "الشمس",
+                "الأربعاء": "القمر",
+                "الخميس": "المريخ",
+                "الجمعة": "عطارد",
+                "السبت": "المشتري",
+                            };
+            document.getElementById("PlanetRow2").innerText = (Planet2[dayOfWeek] || "غير معروف");
+            const Planet3 = {
+                "الأحد": "عطارد",
+                "الاثنين": "المشتري",
+                "الثلاثاء": "الزهرة",
+                "الأربعاء": "زحل",
+                "الخميس": "الشمس",
+                "الجمعة": "القمر",
+                "السبت": "المريخ",
+                            };
+            document.getElementById("PlanetRow3").innerText = (Planet3[dayOfWeek] || "غير معروف");
+            const Planet4 = {
+                "الأحد": "القمر",
+                "الاثنين": "المريخ",
+                "الثلاثاء": "عطارد",
+                "الأربعاء": "المشتري",
+                "الخميس": "الزهرة",
+                "الجمعة": "زحل",
+                "السبت": "الشمس",
+                            };
+            document.getElementById("PlanetRow4").innerText = (Planet4[dayOfWeek] || "غير معروف");
+            const Planet5 = {
+                "الأحد": "زحل",
+                "الاثنين": "الشمس",
+                "الثلاثاء": "القمر",
+                "الأربعاء": "المريخ",
+                "الخميس": "عطارد",
+                "الجمعة": "المشتري",
+                "السبت": "الزهرة",
+                            };
+            document.getElementById("PlanetRow5").innerText = (Planet5[dayOfWeek] || "غير معروف");
+            const Planet6 = {
+                "الأحد": "المشتري",
+                "الاثنين": "الزهرة",
+                "الثلاثاء": "زحل",
+                "الأربعاء": "الشمس",
+                "الخميس": "القمر",
+                "الجمعة": "المريخ",
+                "السبت": "عطارد",
+                            };
+            document.getElementById("PlanetRow6").innerText = (Planet6[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow13").innerText = (Planet6[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow20").innerText = (Planet6[dayOfWeek] || "غير معروف");
+            const Planet7 = {
+                "الأحد": "المريخ",
+                "الاثنين": "عطارد",
+                "الثلاثاء": "المشتري",
+                "الأربعاء": "الزهرة",
+                "الخميس": "زحل",
+                "الجمعة": "الشمس",
+                "السبت": "القمر",
+                            };
+            document.getElementById("PlanetRow7").innerText = (Planet7[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow14").innerText = (Planet7[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow21").innerText = (Planet7[dayOfWeek] || "غير معروف");
+            const Planet8 = {
+                "الأحد": "الشمس",
+                "الاثنين": "القمر",
+                "الثلاثاء": "المريخ",
+                "الأربعاء": "عطارد",
+                "الخميس": "المشتري",
+                "الجمعة": "الزهرة",
+                "السبت": "زحل",
+                            };
+            document.getElementById("PlanetRow8").innerText = (Planet8[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow15").innerText = (Planet8[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow22").innerText = (Planet8[dayOfWeek] || "غير معروف");
+            const Planet9 = {
+                "الأحد": "الزهرة",
+                "الاثنين": "زحل",
+                "الثلاثاء": "الشمس",
+                "الأربعاء": "القمر",
+                "الخميس": "المريخ",
+                "الجمعة": "عطارد",
+                "السبت": "المشتري",
+                            };
+            document.getElementById("PlanetRow9").innerText = (Planet9[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow16").innerText = (Planet9[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow23").innerText = (Planet9[dayOfWeek] || "غير معروف");
+            const Planet10 = {
+                "الأحد": "عطارد",
+                "الاثنين": "المشتري",
+                "الثلاثاء": "الزهرة",
+                "الأربعاء": "زحل",
+                "الخميس": "الشمس",
+                "الجمعة": "القمر",
+                "السبت": "المريخ",
+                            };
+            document.getElementById("PlanetRow10").innerText = (Planet10[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow17").innerText = (Planet10[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow24").innerText = (Planet10[dayOfWeek] || "غير معروف");
+            const Planet11 = {
+                "الأحد": "القمر",
+                "الاثنين": "المريخ",
+                "الثلاثاء": "عطارد",
+                "الأربعاء": "المشتري",
+                "الخميس": "الزهرة",
+                "الجمعة": "زحل",
+                "السبت": "الشمس",
+                            };
+            document.getElementById("PlanetRow11").innerText = (Planet11[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow18").innerText = (Planet11[dayOfWeek] || "غير معروف");
+            const Planet12 = {
+                "الأحد": "زحل",
+                "الاثنين": "الشمس",
+                "الثلاثاء": "القمر",
+                "الأربعاء": "المريخ",
+                "الخميس": "عطارد",
+                "الجمعة": "المشتري",
+                "السبت": "الزهرة",
+                            };
+            document.getElementById("PlanetRow12").innerText = (Planet12[dayOfWeek] || "غير معروف");
+            document.getElementById("PlanetRow19").innerText = (Planet12[dayOfWeek] || "غير معروف");
+
+            const FinalText1 = {
+
+                
+                "الأحد": "الصفـة: سعيد<br>الكوكب الحاكم: الشمس (☉)<br><br>الملك العلوي: روقيائيل<br>العون الأرضي: المذهب<br><br>القسم الأرضي:<br>توكل يا مذهب أنت وأعوانك بحق كوكبك الشمس وبحق طالعك الأسد وبحق يومك الأحد وبحق الملك الغالب أمره عليكم روقيائيل وبحق الملك الموكل بقوائم العرش أبجد وبحق الحمد لله رب العالمين وأقسم عليكم باسم الله فرد أن تساعدوني في عملي هذا",
+                "الاثنين": "الصفـة: سعيد<br>الكوكب الحاكم: القمر ☽<br><br>الملك العلوي: جبرائيل<br>العون الأرضي: الأبيض<br><br>القسم الأرضي:<br>توكل يا أبيض أنت وأعوانك بحق كوكبك القمر وبحق طالعك السرطان وبحق يومك الاثنين وبحق الملك الغالب أمره عليكم جبرائيل وبحق الملك الموكل بقوائم العرش هوزح وبحق الرحمن الرحيم وأقسم عليكم باسم الله جبار أن تساعدوني في عملي هذا",
+                "الثلاثاء": "الصفـة: نحس<br>الكوكب الحاكم: المريخ ♂ <br><br>الملك العلوي: سمسمائيل<br> العون الأرضي: الأحمر<br><br>القسم الأرضي:<br>توكل يا أحمر أنت وأعوانك بحق كوكبك المريخ وبحق طالعك الحمل والعقرب وبحق يومك الثلاثاء وبحق الملك الغالب أمره عليكم سمسمائيل وبحق الملك الموكل بقوائم العرش طيكل وبحق مالك يوم الدين وأقسم عليكم باسم الله شهيد أن تساعدوني في عملي هذا",
+                "الأربعاء": "الصفـة: ممتزج يميل للنحس<br>الكوكب الحاكم: عطارد ☿<br><br>الملك العلوي: ميكائيل<br>العون الأرضي: برقان<br><br>القسم الأرضي:<br> توكل يا برقان أنت وأعوانك بحق كوكبك عطارد وبحق طالعك الجوزاء والعذراء وبحق يومك الأربعاء وبحق الملك الغالب أمره عليكم ميكائيل وبحق الملك الموكل بقوائم العرش منسع وبحق إياك نعبد وإياك نستعين وأقسم عليكم باسم الله ثابت أن تساعدوني في عملي هذا",
+                "الخميس": "الصفـة: سعيد<br>الكوكب الحاكم: المشتري ♃<br><br>الملك العلوي: صرفيائيل<br>العون الأرضي: شمهورش<br><br>القسم الأرضي:<br> توكل يا شمهورش أنت وأعوانك بحق كوكبك المشتري وبحق طالعك القوس والحوت وبحق يومك الخميس وبحق الملك الغالب أمره عليكم صرفيائيل وبحق الملك الموكل بقوائم العرش فصقر وبحق اهدنا الصراط المستقيم، وأقسم عليكم باسم الله ظهير أن تساعدوني في عملي هذا",
+                "الجمعة": "الصفـة: سعيد<br>الكوكب الحاكم: الزهرة ♀ <br><br>الملك العلوي: عنيائيل<br>العون الأرضي: زوبعة<br><br>القسم الأرضي:<br> توكل يا زوبعة أنت وأعوانك بحق كوكبك الزهرة وبحق طالعك الثور والميزان وبحق يومك الجمعة وبحق الملك الغالب أمره عليكم عنيائيل وبحق الملك الموكل بقوائم العرش شتثخ وبحق صراط الذين أنعمت عليهم وأقسم عليكم باسم الله خبير أن تساعدوني في عملي هذا",
+                "السبت": "الصفـة: نحس<br>الكوكب الحاكم: زحل ♄ <br><br>الملك العلوي: كسفيائيل<br>العون الأرضي: ميمون<br><br>القسم الأرضي:<br>توكل يا ميمون أنت وأعوانك بحق كوكبك زحل وبحق طالعك الجدي والدلو وبحق يومك السبت وبحق الملك الغالب أمره عليكم كسفيائيل وبحق الملك الموكل بقوائم العرش ذضظغ وبحق غير المغضوب عليهم ولا الضالين وأقسم عليكم باسم الله زكي أن تساعدوني في عملي هذا",
+             };
+            document.getElementById("TextBox1").innerHTML = (FinalText1[dayOfWeek] || "غير معروف");
+            const FinalText2 = {
+
+            "الأحد": "الصفـة: سعيد<br>الكوكب الحاكم: المشتري ♃<br><br>الملك العلوي: صرفيائيل<br>العون الأرضي: شمهورش<br><br>القسم الأرضي:<br> توكل يا شمهورش أنت وأعوانك بحق كوكبك المشتري وبحق طالعك القوس والحوت وبحق ليلتك الاثنين وبحق الملك الغالب أمره عليكم صرفيائيل وبحق الملك الموكل بقوائم العرش فصقر وبحق اهدنا الصراط المستقيم، وأقسم عليكم باسم الله ظهير أن تساعدوني في عملي هذا",
+            "الاثنين": "الصفـة: سعيد<br>الكوكب الحاكم: الزهرة ♀ <br><br>الملك العلوي: عنيائيل<br>العون الأرضي: زوبعة<br><br>القسم الأرضي:<br> توكل يا زوبعة أنت وأعوانك بحق كوكبك الزهرة وبحق طالعك الثور والميزان وبحق ليلتك الثلاثاء وبحق الملك الغالب أمره عليكم عنيائيل وبحق الملك الموكل بقوائم العرش شتثخ وبحق صراط الذين أنعمت عليهم وأقسم عليكم باسم الله خبير أن تساعدوني في عملي هذا",
+            "الثلاثاء": "الصفـة: نحس<br>الكوكب الحاكم: زحل ♄ <br><br>الملك العلوي: كسفيائيل<br>العون الأرضي: ميمون<br><br>القسم الأرضي:<br>توكل يا ميمون أنت وأعوانك بحق كوكبك زحل وبحق طالعك الجدي والدلو وبحق ليلتك الأربعاء وبحق الملك الغالب أمره عليكم كسفيائيل وبحق الملك الموكل بقوائم العرش ذضظغ وبحق غير المغضوب عليهم ولا الضالين وأقسم عليكم باسم الله زكي أن تساعدوني في عملي هذا",
+            "الأربعاء": "الصفـة: سعيد<br>الكوكب الحاكم: الشمس ☉<br><br>الملك العلوي: روقيائيل<br>العون الأرضي: المذهب<br><br>القسم الأرضي:<br> توكل يا مذهب أنت وأعوانك بحق كوكبك الشمس وبحق طالعك الأسد وبحق ليلتك الخميس وبحق الملك الغالب أمره عليكم روقيائيل وبحق الملك الموكل بقوائم العرش أبجد وبحق الحمد لله رب العالمين وأقسم عليكم باسم الله فرد أن تساعدوني في عملي هذا",
+            "الخميس": "الصفـة: سعيد<br>الكوكب الحاكم: القمر ☽<br><br>الملك العلوي: جبرائيل<br>العون الأرضي: الأبيض<br><br>القسم الأرضي:<br>توكل يا أبيض أنت وأعوانك بحق كوكبك القمر وبحق طالعك السرطان وبحق ليلتك الجمعة وبحق الملك الغالب أمره عليكم جبرائيل وبحق الملك الموكل بقوائم العرش هوزح وبحق الرحمن الرحيم وأقسم عليكم باسم الله جبار أن تساعدوني في عملي هذا",
+            "الجمعة": "الصفـة: نحس<br>الكوكب الحاكم: المريخ ♂ <br><br>الملك العلوي: سمسمائيل<br> العون الأرضي: الأحمر<br><br>القسم الأرضي:<br>توكل يا أحمر أنت وأعوانك بحق كوكبك المريخ وبحق طالعك الحمل والعقرب وبحق ليلتك السبت وبحق الملك الغالب أمره عليكم سمسمائيل وبحق الملك الموكل بقوائم العرش طيكل وبحق مالك يوم الدين وأقسم عليكم باسم الله شهيد أن تساعدوني في عملي هذا",
+            "السبت": "الصفـة: ممتزج يميل للنحس<br>الكوكب الحاكم: عطارد ☿<br><br>الملك العلوي: ميكائيل<br>العون الأرضي: برقان<br><br>القسم الأرضي:<br> توكل يا برقان أنت وأعوانك بحق كوكبك عطارد وبحق طالعك الجوزاء والعذراء وبحق ليلتك الأحد وبحق الملك الغالب أمره عليكم ميكائيل وبحق الملك الموكل بقوائم العرش منسع وبحق إياك نعبد وإياك نستعين وأقسم عليكم باسم الله ثابت أن تساعدوني في عملي هذا",
+            };
+document.getElementById("TextBox2").innerHTML = (FinalText2[dayOfWeek] || "غير معروف");
+    
+        
+            const timeDifference = (end, start) => {
+                const [endHours, endMinutes] = end.split(':').map(Number);
+                const [startHours, startMinutes] = start.split(':').map(Number);
+                
+                if (isNaN(endHours) || isNaN(endMinutes) || isNaN(startHours) || isNaN(startMinutes)) {
+                    return NaN;
+                }
+                return (endHours * 3600 + endMinutes * 60) - (startHours * 3600 + startMinutes * 60);
+            };
+        
+            const formatTime = (seconds) => {
+                if (isNaN(seconds)) return "غير صالح";
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+      
+                return hours % 24 + ":" + mins.toString().padStart(2, '0') + ":" + secs.toString().padStart(2, '0');
+    
+            };
+        
+            const sunsetMinusSunrise = timeDifference(sunsetInput, sunriseInput);
+            document.getElementById("غروب_ناقص_شروق").innerText = "الغروب ناقص الشروق: " + formatTime(sunsetMinusSunrise);
+        
+            const sunsetMinusNextSunrise = timeDifference(sunsetInput, nextSunriseInput);
+            document.getElementById("غروب_ناقص_شروق_تالي").innerText = "الغروب ناقص الشروق في اليوم التالي: " + formatTime(sunsetMinusNextSunrise);
+     
+            
+            // الشنوي
+            const midSunsetNextSunrise = (12 * 3600 - sunsetMinusSunrise) + sunsetMinusNextSunrise + (12 * 3600 - sunsetMinusNextSunrise);
+            document.getElementById("منتصف_غروب_شروق_تالي").innerText = "منتصف الغروب ناقص الشروق في اليوم التالي: " + formatTime(midSunsetNextSunrise);
+            // الصيفي
+            const midSunsetSunrise = (12 * 3600 - sunsetMinusSunrise) + sunsetMinusSunrise + (12 * 3600 - sunsetMinusNextSunrise);
+            document.getElementById("منتصف_غروب_شروق").innerText = "منتصف الغروب ناقص الشروق: " + formatTime(midSunsetSunrise);
+        
+            
+            //  الدالة الشتوية
+            const winterEquation = (seconds) => formatTime(seconds / 12);
+            document.getElementById("معادلة_الشتاء_غروب_شروق_نصف_اليوم").innerText = " معادلة الوقت الشتوي (الغروب ناقص الشروق) منتصف اليوم: " + winterEquation(sunsetMinusSunrise);
+            document.getElementById("معادلة_الشتاء_غروب_شروق_تالي_نصف_اليوم").innerText = "معادلة الوقت الشتوي (الغروب ناقص الشروق في اليوم التالي) منتصف اليوم: " + winterEquation(midSunsetNextSunrise);
+            //  الدالة الصيفية
+            const summerEquation = (seconds) => formatTime(seconds / 12);
+            document.getElementById("معادلة_الصيف_غروب_شروق_نصف_اليوم").innerText = "معادلة الوقت الصيفي (الغروب ناقص الشروق) منتصف اليوم: " + summerEquation(midSunsetSunrise);
+            document.getElementById("معادلة_الصيف_غروب_شروق_تالي_نصف_اليوم").innerText = "معادلة الوقت الصيفي (الغروب ناقص الشروق في اليوم التالي) منتصف اليوم: " + summerEquation(sunsetMinusNextSunrise);
+            // حساب صف1: جمع وقت الشروق مع معادلة الشتوي
+            const sunriseInSeconds = (parseInt(sunriseInput.split(':')[0]) * 3600) + (parseInt(sunriseInput.split(':')[1]) * 60);
+            
+            const winterEquationResult = sunsetMinusSunrise / 12;
+            const summerEquationResult = midSunsetSunrise / 12;
+            
+            //الصف الاول
+            let Row1Result;
+            if (season === "winter") {
+                Row1Result = sunriseInSeconds + winterEquationResult;
+            } else if (season === "summer") {
+                Row1Result = sunriseInSeconds + summerEquationResult;
+            }
+            document.getElementById("Row1").innerText = formatTime(Row1Result);
+            document.getElementById("Row1-1").innerText = formatTime(Row1Result);
+
+            // الصف الثاني
+            let Row2Result;
+            if (season === "winter") {
+                Row2Result = Row1Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row2Result = Row1Result + summerEquationResult;
+            }
+            document.getElementById("Row2").innerText = formatTime(Row2Result);
+            document.getElementById("Row2-2").innerText = formatTime(Row2Result);
+
+            // الصف الثالث
+            let Row3Result;
+            if (season === "winter") {
+                Row3Result = Row2Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row3Result = Row2Result + summerEquationResult;
+            }
+            document.getElementById("Row3").innerText = formatTime(Row3Result);
+            document.getElementById("Row3-3").innerText = formatTime(Row3Result);
+            
+            // الصف الرابع
+            let Row4Result;
+            if (season === "winter") {
+                Row4Result = Row3Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row4Result = Row3Result + summerEquationResult;
+            }
+            document.getElementById("Row4").innerText = formatTime(Row4Result);
+            document.getElementById("Row4-4").innerText = formatTime(Row4Result);
+
+            // الصف الخامس
+            let Row5Result;
+            if (season === "winter") {
+                Row5Result = Row4Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row5Result = Row4Result + summerEquationResult;
+            }
+            document.getElementById("Row5").innerText = formatTime(Row5Result);
+            document.getElementById("Row5-5").innerText = formatTime(Row5Result);
+            
+            // الصف السادس
+            let Row6Result;
+            if (season === "winter") {
+                Row6Result = Row5Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row6Result = Row5Result + summerEquationResult;
+            }
+            document.getElementById("Row6").innerText = formatTime(Row6Result);
+            document.getElementById("Row6-6").innerText = formatTime(Row6Result);
+
+            // الصف السابع
+            let Row7Result;
+            if (season === "winter") {
+                Row7Result = Row6Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row7Result = Row6Result + summerEquationResult;
+            }
+            document.getElementById("Row7").innerText = formatTime(Row7Result);
+            document.getElementById("Row7-7").innerText = formatTime(Row7Result);
+
+            // الصف الثامن
+            let Row8Result;
+            if (season === "winter") {
+                Row8Result = Row7Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row8Result = Row7Result + summerEquationResult;
+            }
+            document.getElementById("Row8").innerText = formatTime(Row8Result);
+            document.getElementById("Row8-8").innerText = formatTime(Row8Result);
+
+            // الصف التاسع
+            let Row9Result;
+            if (season === "winter") {
+                Row9Result = Row8Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row9Result = Row8Result + summerEquationResult;
+            }
+            document.getElementById("Row9").innerText = formatTime(Row9Result);
+            document.getElementById("Row9-9").innerText = formatTime(Row9Result);
+
+            // الصف العاشر
+            let Row10Result;
+            if (season === "winter") {
+                Row10Result = Row9Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row10Result = Row9Result + summerEquationResult;
+            }
+            document.getElementById("Row10").innerText = formatTime(Row10Result);
+            document.getElementById("Row10-10").innerText = formatTime(Row10Result);
+
+            // الصف الحادي عشر
+            let Row11Result;
+            if (season === "winter") {
+                Row11Result = Row10Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row11Result = Row10Result + summerEquationResult;
+            }
+            document.getElementById("Row11").innerText = formatTime(Row11Result);
+            document.getElementById("Row11-11").innerText = formatTime(Row11Result);
+
+            // الصف الثاني عشر
+            let Row12Result;
+            if (season === "winter") {
+                Row12Result = Row11Result + winterEquationResult;
+            } else if (season === "summer") {
+                Row12Result = Row11Result + summerEquationResult;
+            }
+            document.getElementById("Row12").innerText = formatTime(Row12Result);
+            document.getElementById("Row12-12").innerText = formatTime(Row12Result);
+
+            // الصفوف من 13 إلى 24
+            const winterEquationResult2 = midSunsetNextSunrise / 12;
+            const summerEquationResult2 = sunsetMinusNextSunrise / 12;
+
+             // الصف الثالث عشر
+             let Row13Result;
+            if (season === "winter") {
+                Row13Result = Row12Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row13Result = Row12Result + summerEquationResult2;
+            }
+            document.getElementById("Row13").innerText = formatTime(Row13Result);
+            document.getElementById("Row13-13").innerText = formatTime(Row13Result);
+
+             // الصف الرابع عشر
+             let Row14Result;
+            if (season === "winter") {
+                Row14Result = Row13Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row14Result = Row13Result + summerEquationResult2;
+            }
+            document.getElementById("Row14").innerText = formatTime(Row14Result);
+            document.getElementById("Row14-14").innerText = formatTime(Row14Result);
+
+             // الصف الخامس عشر
+             let Row15Result;
+            if (season === "winter") {
+                Row15Result = Row14Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row15Result = Row14Result + summerEquationResult2;
+            }
+            document.getElementById("Row15").innerText = formatTime(Row15Result);
+            document.getElementById("Row15-15").innerText = formatTime(Row15Result);
+
+             // الصف السادس عشر
+             let Row16Result;
+            if (season === "winter") {
+                Row16Result = Row15Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row16Result = Row15Result + summerEquationResult2;
+            }
+            document.getElementById("Row16").innerText = formatTime(Row16Result);
+            document.getElementById("Row16-16").innerText = formatTime(Row16Result);
+
+             // الصف السابع عشر
+             let Row17Result;
+            if (season === "winter") {
+                Row17Result = Row16Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row17Result = Row16Result + summerEquationResult2;
+            }
+            document.getElementById("Row17").innerText = formatTime(Row17Result);
+            document.getElementById("Row17-17").innerText = formatTime(Row17Result);
+
+             // الصف الثامن عشر
+             let Row18Result;
+            if (season === "winter") {
+                Row18Result = Row17Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row18Result = Row17Result + summerEquationResult2;
+            }
+            document.getElementById("Row18").innerText = formatTime(Row18Result);
+            document.getElementById("Row18-18").innerText = formatTime(Row18Result);
+
+             // الصف التاسع عشر
+             let Row19Result;
+            if (season === "winter") {
+                Row19Result = Row18Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row19Result = Row18Result + summerEquationResult2;
+            }
+            document.getElementById("Row19").innerText = formatTime(Row19Result);
+            document.getElementById("Row19-19").innerText = formatTime(Row19Result);
+
+             // الصف العشرون
+             let Row20Result;
+            if (season === "winter") {
+                Row20Result = Row19Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row20Result = Row19Result + summerEquationResult2;
+            }
+            document.getElementById("Row20").innerText = formatTime(Row20Result);
+            document.getElementById("Row20-20").innerText = formatTime(Row20Result);
+
+             // الصف الحادي والعشرون
+             let Row21Result;
+            if (season === "winter") {
+                Row21Result = Row20Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row21Result = Row20Result + summerEquationResult2;
+            }
+            document.getElementById("Row21").innerText = formatTime(Row21Result);
+            document.getElementById("Row21-21").innerText = formatTime(Row21Result);
+
+             // الصف الثاني والعشرون
+             let Row22Result;
+            if (season === "winter") {
+                Row22Result = Row21Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row22Result = Row21Result + summerEquationResult2;
+            }
+            document.getElementById("Row22").innerText = formatTime(Row22Result);
+            document.getElementById("Row22-22").innerText = formatTime(Row22Result);
+
+             // الصف الثالث والعشرون
+             let Row23Result;
+            if (season === "winter") {
+                Row23Result = Row22Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row23Result = Row22Result + summerEquationResult2;
+            }
+            document.getElementById("Row23").innerText = formatTime(Row23Result);
+            document.getElementById("Row23-23").innerText = formatTime(Row23Result);
+
+             // الصف الرابع والعشرون
+             let Row24Result;
+            if (season === "winter") {
+                Row24Result = Row23Result + winterEquationResult2;
+            } else if (season === "summer") {
+                Row24Result = Row23Result + summerEquationResult2;
+            }
+            document.getElementById("Row24").innerText = formatTime(Row24Result);
+           
+            
+        }
+    
+    </script>
+</body>
+</html>
